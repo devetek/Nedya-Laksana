@@ -2,6 +2,7 @@ import app from "firebase/app";
 import "firebase/database";
 import "firebase/analytics";
 import "firebase/firestore";
+import moment from "moment";
 
 const config = {
   apiKey: "AIzaSyBH0_lbGe4h0OoJ27P3tCP6nsnmgFIeIC8",
@@ -23,6 +24,10 @@ export interface IFirebaseClass {
   getStartFrom: () => Promise<
     app.firestore.DocumentSnapshot<app.firestore.DocumentData>
   >;
+  insertIncoming: (total: number) => Promise<void>;
+  insertOutgoing: (total: number) => Promise<void>;
+  getListIncoming: () => any;
+  getListOutgoing: () => any;
 }
 
 class Firebase implements IFirebaseClass {
@@ -41,8 +46,46 @@ class Firebase implements IFirebaseClass {
 
   updateStartFrom = () =>
     this.store.collection("first_value").doc("permanent").get();
+
   getStartFrom = () =>
     this.store.collection("first_value").doc("permanent").get();
+
+  insertIncoming = async (total: number): Promise<void> => {
+    await this.store
+      .collection("incoming")
+      .doc(String(moment().unix()))
+      .set({
+        total,
+        month: moment().format("MMMM"),
+        date: new Date(),
+      });
+  };
+
+  insertOutgoing = async (total: number): Promise<void> => {
+    await this.store
+      .collection("outgoing")
+      .doc(String(moment().unix()))
+      .set({
+        total,
+        month: moment().format("MMMM"),
+        date: new Date(),
+      });
+  };
+
+
+  getListIncoming = (): any => {
+    return this.store
+      .collection("incoming")
+      .where("month", "==", moment().format("MMMM"))
+      .limit(5);
+  };
+
+  getListOutgoing = (): any => {
+    return this.store
+      .collection("outgoing")
+      .where("month", "==", moment().format("MMMM"))
+      .limit(5);
+  };
 }
 
 export default Firebase;
